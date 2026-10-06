@@ -1,3 +1,4 @@
+import pandas as pd
 import requests
 import streamlit as st
 
@@ -12,7 +13,7 @@ st.write(
     " instalaciones desde la API de MIAA."
 )
 
-# Rutas fijas y lectura correcta de credenciales desde la sección [api] de los secretos
+# Lectura de credenciales desde la sección [api] de los secretos
 BASE_URL = "https://prelec.miaa.mx"
 URL_LOGIN_CORRECTA = "/auth/login"
 URL_INSTALACIONES = "https://prelec.miaa.mx/msvc-tecnica/medidores/instalaciones"
@@ -104,15 +105,35 @@ if st.button("Probar Conexión y Descarga"):
             "La API respondió y entregó las instalaciones correctamente."
         )
 
-        respuesta_json = str(res_inst.json())
-        muestra = respuesta_json[:1000] + (
-            "...\n[Datos truncados por visualización]"
-            if len(respuesta_json) > 1000
-            else ""
-        )
+        # Procesar los datos JSON a DataFrame de Pandas
+        data_json = res_inst.json()
 
-        st.subheader("Muestra parcial de los registros obtenidos:")
-        st.code(muestra, language="json")
+        # Validar si la respuesta es una lista directa o viene dentro de un diccionario
+        if isinstance(data_json, list):
+          df = pd.DataFrame(data_json)
+        elif isinstance(data_json, dict):
+          # Si la lista de registros está en una clave común como 'data' o 'content', búscala; de lo contrario, intenta convertir el dict
+          lista_datos = (
+              data_json.get("data")
+              or data_json.get("content")
+              or data_json.get("results")
+              or [data_json]
+          )
+          df = pd.DataFrame(lista_datos)
+        else:
+          df = pd.DataFrame()
+
+        st.subheader("📋 Primeros 10 registros de instalaciones:")
+        if not df.empty:
+          # Muestra interactiva de los primeros 10 registros en formato de tabla
+          st.dataframe(df.head(10), use_container_width=True)
+          st.info(f"Total de registros totales descargados: {len(df)}")
+        else:
+          st.warning(
+              "La respuesta no contiene una estructura tabular reconocible."
+          )
+          st.json(data_json)
+
       else:
         registrar(
             "\n[ERROR] El token funcionó pero falló la consulta de"
