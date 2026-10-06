@@ -1,56 +1,34 @@
 import requests
 import streamlit as st
 
-# Configuración de la página (Tema y diseño)
+# Configuración de la página
 st.set_page_config(
     page_title="Validador de API MIAA - Web", page_icon="💧", layout="centered"
 )
 
-# Estilo visual personalizado (HUD / Dark o limpio adaptado)
-st.markdown(
-    """
-    <style>
-    .main {
-        background-color: #f0f2f5;
-    }
-    .stButton>button {
-        width: 100%;
-        background-color: #007acc;
-        color: white;
-        font-weight: bold;
-        border-radius: 6px;
-        padding: 0.5rem;
-    }
-    .stButton>button:hover {
-        background-color: #005999;
-        color: white;
-    }
-    </style>
-""",
-    unsafe_allow_html=True,
-)
-
 st.title("💧 Validador Definitivo MIAA")
 st.write(
-    "Herramienta web para validar la autenticación y descarga masiva de instalaciones desde la API de MIAA."
+    "Herramienta web para validar la autenticación y descarga masiva de"
+    " instalaciones desde la API de MIAA."
 )
 
-# Carga segura de credenciales y rutas desde st.secrets
+# Rutas fijas y lectura correcta de credenciales desde la sección [api] de los secretos
+BASE_URL = "https://prelec.miaa.mx"
+URL_LOGIN_CORRECTA = "/auth/login"
+URL_INSTALACIONES = "https://prelec.miaa.mx/msvc-tecnica/medidores/instalaciones"
+
 try:
-    BASE_URL = st.secrets["api"]["base_url"]
-    URL_LOGIN_CORRECTA = st.secrets["api"]["url_login"]
-    URL_INSTALACIONES = st.secrets["api"]["url_instalaciones"]
-    USUARIO = st.secrets["api"]["usuario"]
-    PASSWORD = st.secrets["api"]["password"]
+  USUARIO = st.secrets["api"]["usuario"]
+  PASSWORD = st.secrets["api"]["password"]
 except Exception as e:
-    st.error(
-        "Faltan las credenciales o la sección [api] en el archivo de secretos (`secrets.toml`)."
-    )
-    st.stop()
+  st.error(
+      "Faltan las credenciales o la sección [api] en el archivo de secretos"
+      f" de Streamlit. Detalle: {e}"
+  )
+  st.stop()
 
 # Botón para ejecutar la prueba de conexión
 if st.button("Probar Conexión y Descarga"):
-  # Contenedor para los logs en tiempo real dentro de la interfaz web
   log_container = st.empty()
   logs = []
 
